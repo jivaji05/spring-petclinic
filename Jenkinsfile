@@ -1,5 +1,6 @@
 // Generate a random id for pod label to avoid waiting for executor. Just start create pod right away.
 // See this workaround from issue: https://issues.jenkins.io/browse/JENKINS-39801
+//
 import static java.util.UUID.randomUUID
 def uuid = randomUUID() as String
 def myid = uuid.take(8)
