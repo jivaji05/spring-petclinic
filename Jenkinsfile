@@ -20,7 +20,7 @@ pipeline {
   }    
   agent {
     kubernetes {
-#      label "spring-petclinic-${myid}"
+//      label "spring-petclinic-${myid}"
       instanceCap 1
       defaultContainer 'jnlp'
       yaml """
