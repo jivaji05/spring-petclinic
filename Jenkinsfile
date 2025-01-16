@@ -7,15 +7,16 @@ def myid = uuid.take(8)
 pipeline {
   environment {
     APP_VER = "v1.0.${BUILD_ID}"
-    // HARBOR_URL = ""
     DEPLOY_GITREPO_USER = "jivaji05"    
     DEPLOY_GITREPO_URL = "github.com/${DEPLOY_GITREPO_USER}/spring-petclinic-helmchart.git"
     DEPLOY_GITREPO_BRANCH = "main"
     DEPLOY_GITREPO_TOKEN = credentials('my-github')
+    //HARBOR_URL = "harbor.anpslab.com"
+    //HARBOR_CREDENTIALS = credentials('my-harbor')
     SCANNER_IMAGE = 'neuvector/scanner:latest' // Replace with the correct NeuVector scanner image
     HARBOR_IMAGE = 'devsecops/spring-petclinic' // Replace with your Docker image to scan
     NAMESPACE = 'cattle-neuvector-system' // Namespace where NeuVector is deployed
-    SCANNER_POD_LABEL = 'neuvector-scanner' // Label of the NeuVector scanner pod    
+    SCANNER_POD_LABEL = 'neuvector-scanner' // Label of the NeuVector scanner pod
   }    
   agent {
     kubernetes {
@@ -67,8 +68,8 @@ spec:
       persistentVolumeClaim:
         claimName: m2
 """
-}
-   }
+    }
+  }
   stages {
     stage('Build') {
       steps {
@@ -82,7 +83,7 @@ spec:
     }
     stage('Test') {
       parallel {
-        stage(' Unit/Integration Tests') {
+        stage('Unit/Integration Tests') {
           steps {
             container('maven') {
               sh """
@@ -122,15 +123,29 @@ spec:
     stage('Containerize') {
       steps {
         container('kaniko') {
-          sh "sed -i 's,harbor.example.com,${env.HARBOR_URL},g' Dockerfile"
-          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --destination=${env.HARBOR_URL}/library/samples/spring-petclinic:v1.0.${env.BUILD_ID}"
+          sh "sed -i 's,harbor.example.com,${env.HARBOR_URL},g' Dockerfile" 
+          sh "cat Dockerfile"
+          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --force --destination=${env.HARBOR_URL}/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
         }
       }
     }
-    stage('Image Vulnerability Scan') {
+    stage('NeuVector Image Vulnerability Scan') {
       steps {
-        writeFile file: 'anchore_images', text: "${env.HARBOR_URL}/library/samples/spring-petclinic:v1.0.${env.BUILD_ID}"
-        anchore name: 'anchore_images'
+        //nv jenkins plugin conf
+        neuvector nameOfVulnerabilityToExemptFour: 'CVE-2020-36518',
+        nameOfVulnerabilityToExemptOne: 'CVE-2022-42004',
+        nameOfVulnerabilityToExemptThree: 'CVE-2021-42550',
+        nameOfVulnerabilityToExemptTwo: 'CVE-2020-17527',
+        nameOfVulnerabilityToFailFour: '', 
+        nameOfVulnerabilityToFailOne: '', 
+        nameOfVulnerabilityToFailThree: '', 
+        nameOfVulnerabilityToFailTwo: '', 
+        numberOfHighSeverityToFail: '300', 
+        numberOfMediumSeverityToFail: '300', 
+        registrySelection: 'harbor', 
+        repository: "devsecops/spring-petclinic", 
+        scanLayers: true,
+        tag: "v1.0.${env.BUILD_ID}"
       }
     }
     stage('Approval') {
@@ -152,7 +167,7 @@ spec:
             # After cloning
             cd deploy
             # update values.yaml
-            sed -i -r 's,repository: (.+),repository: ${env.HARBOR_URL}/library/samples/spring-petclinic,' values.yaml
+            sed -i -r 's,repository: (.+),repository: ${env.HARBOR_URL}/devsecops/spring-petclinic,' values.yaml
             sed -i 's/tag: v1.0.*/tag: v1.0.${env.BUILD_ID}/' values.yaml
             cat values.yaml
             git commit -am 'bump up version number'
