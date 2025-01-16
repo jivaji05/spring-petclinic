@@ -8,10 +8,14 @@ pipeline {
   environment {
     APP_VER = "v1.0.${BUILD_ID}"
     // HARBOR_URL = ""
-    DEPLOY_GITREPO_USER = "your_name"    
+    DEPLOY_GITREPO_USER = "jivaji05"    
     DEPLOY_GITREPO_URL = "github.com/${DEPLOY_GITREPO_USER}/spring-petclinic-helmchart.git"
     DEPLOY_GITREPO_BRANCH = "main"
     DEPLOY_GITREPO_TOKEN = credentials('my-github')
+    SCANNER_IMAGE = 'neuvector/scanner:latest' // Replace with the correct NeuVector scanner image
+    HARBOR_IMAGE = 'devsecops/spring-petclinic' // Replace with your Docker image to scan
+    NAMESPACE = 'cattle-neuvector-system' // Namespace where NeuVector is deployed
+    SCANNER_POD_LABEL = 'neuvector-scanner' // Label of the NeuVector scanner pod    
   }    
   agent {
     kubernetes {
@@ -160,4 +164,3 @@ spec:
     }   
   }
 }
-
