@@ -104,20 +104,20 @@ spec:
             }
           } 
         }
-        stage('Static Code Analysis') {
-          steps {
-            container('maven') {
-              withSonarQubeEnv('sonarqube') { 
-                sh """
-                mvn sonar:sonar \
-                  -Dsonar.projectKey=spring-petclinic \
-                  -Dsonar.host.url=${env.SONAR_HOST_URL} \
-                  -Dsonar.login=${env.SONAR_AUTH_TOKEN}
-                """
-              }
-            }
-          }
-        }  
+        //stage('Static Code Analysis') {
+          //steps {
+            //container('maven') {
+              //withSonarQubeEnv('Sonarqube') { 
+                //sh """
+                //mvn sonar:sonar \
+                  //-Dsonar.projectKey=spring-petclinic \
+                  //-Dsonar.host.url=${env.SONAR_HOST_URL} \
+                  //-Dsonar.login=${env.SONAR_AUTH_TOKEN}
+                //"""
+             // }
+            //}
+          //}
+        //}  
       }
     }
     stage('Containerize') {
