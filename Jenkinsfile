@@ -125,7 +125,7 @@ spec:
         container('kaniko') {
           sh "sed -i 's,harbor.example.com,${env.HARBOR_URL},g' Dockerfile" 
           sh "cat Dockerfile"
-          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --force --destination=${env.HARBOR_URL}/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
+          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --force --destination=${env.HARBOR_URL}/library/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
         }
       }
     }
@@ -143,7 +143,7 @@ spec:
         numberOfHighSeverityToFail: '300', 
         numberOfMediumSeverityToFail: '300', 
         registrySelection: 'harbor', 
-        repository: "devsecops/spring-petclinic", 
+        repository: "/library/devsecops/spring-petclinic", 
         scanLayers: true,
         tag: "v1.0.${env.BUILD_ID}"
         //writeFile file: 'anchore_images', text: "${env.HARBOR_URL}/library/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
@@ -169,7 +169,7 @@ spec:
             # After cloning
             cd deploy
             # update values.yaml
-            sed -i -r 's,repository: (.+),repository: ${env.HARBOR_URL}/library/samples/spring-petclinic,' values.yaml
+            sed -i -r 's,repository: (.+),repository: ${env.HARBOR_URL}/library/devsecops/spring-petclinic,' values.yaml
             sed -i 's/tag: v1.0.*/tag: v1.0.${env.BUILD_ID}/' values.yaml
             cat values.yaml
             git commit -am 'bump up version number'
