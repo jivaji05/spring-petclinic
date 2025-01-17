@@ -7,7 +7,7 @@ def myid = uuid.take(8)
 pipeline {
   environment {
     APP_VER = "v1.0.${BUILD_ID}"
-    // HARBOR_URL = ""
+    HARBOR_URL = ""
     DEPLOY_GITREPO_USER = "jivaji05"    
     DEPLOY_GITREPO_URL = "github.com/${DEPLOY_GITREPO_USER}/spring-petclinic-helmchart.git"
     DEPLOY_GITREPO_BRANCH = "main"
@@ -123,14 +123,29 @@ spec:
     stage('Containerize') {
       steps {
         container('kaniko') {
-          sh "sed -i 's,harbor.example.com,${env.HARBOR_URL},g' Dockerfile"
-          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --destination=${env.HARBOR_URL}/library/samples/spring-petclinic:v1.0.${env.BUILD_ID}"
+          sh "sed -i 's,harbor.anpslab.com,${env.HARBOR_URL},g' Dockerfile"
+          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --destination=${env.HARBOR_URL}/library/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
         }
       }
     }
     stage('Image Vulnerability Scan') {
       steps {
-        writeFile file: 'anchore_images', text: "${env.HARBOR_URL}/library/samples/spring-petclinic:v1.0.${env.BUILD_ID}"
+          //nv jenkins plugin conf
+        neuvector nameOfVulnerabilityToExemptFour: 'CVE-2020-36518',
+        nameOfVulnerabilityToExemptOne: 'CVE-2022-42004',
+        nameOfVulnerabilityToExemptThree: 'CVE-2021-42550',
+        nameOfVulnerabilityToExemptTwo: 'CVE-2020-17527',
+        nameOfVulnerabilityToFailFour: '', 
+        nameOfVulnerabilityToFailOne: '', 
+        nameOfVulnerabilityToFailThree: '', 
+        nameOfVulnerabilityToFailTwo: '', 
+        numberOfHighSeverityToFail: '300', 
+        numberOfMediumSeverityToFail: '300', 
+        registrySelection: 'harbor', 
+        repository: "devsecops/spring-petclinic", 
+        scanLayers: true,
+        tag: "v1.0.${env.BUILD_ID}"
+        writeFile file: 'anchore_images', text: "${env.HARBOR_URL}/library/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
         anchore name: 'anchore_images'
       }
     }
