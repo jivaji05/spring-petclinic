@@ -90,12 +90,12 @@ spec:
                 mvn -B -ntp -T 2 test -DAPP_VERSION=${APP_VER}
               """
             }
-            jacoco ( 
-              execPattern: 'target/*.exec',
-              classPattern: 'target/classes',
-              sourcePattern: 'src/main/java',
-              exclusionPattern: 'src/test*'
-            )
+           // jacoco ( 
+             // execPattern: 'target/*.exec',
+             // classPattern: 'target/classes',
+              //sourcePattern: 'src/main/java',
+              //exclusionPattern: 'src/test*'
+            //)
           }
           post {
             always {
