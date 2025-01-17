@@ -104,27 +104,28 @@ spec:
             }
           } 
         }
-        //stage('Static Code Analysis') {
-          //steps {
-            //container('maven') {
-              //withSonarQubeEnv('My SonarQube') { 
-                //sh """
-                //mvn sonar:sonar \
-                  //-Dsonar.projectKey=spring-petclinic \
-                  //-Dsonar.host.url=${env.SONAR_HOST_URL} \
-                  //-Dsonar.login=${env.SONAR_AUTH_TOKEN}
-                //"""
-              //}
-            //}
-          //}
-        //}  
+        stage('Static Code Analysis') {
+          steps {
+            container('maven') {
+              withSonarQubeEnv('sonarqube') { 
+                sh """
+                mvn sonar:sonar \
+                  -Dsonar.projectKey=spring-petclinic \
+                  -Dsonar.host.url=${env.SONAR_HOST_URL} \
+                  -Dsonar.login=${env.SONAR_AUTH_TOKEN}
+                """
+              }
+            }
+          }
+        }  
       }
     }
     stage('Containerize') {
       steps {
         container('kaniko') {
-          sh "sed -i 's,harbor.anpslab.com,${env.HARBOR_URL},g' Dockerfile"
-          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --force --destination=${env.HARBOR_URL}/library/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
+          sh "sed -i 's,harbor.example.com,${env.HARBOR_URL},g' Dockerfile" 
+          sh "cat Dockerfile"
+          sh "/kaniko/executor --dockerfile Dockerfile --context `pwd` --skip-tls-verify --force --destination=${env.HARBOR_URL}/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
         }
       }
     }
@@ -145,8 +146,8 @@ spec:
         repository: "devsecops/spring-petclinic", 
         scanLayers: true,
         tag: "v1.0.${env.BUILD_ID}"
-        writeFile file: 'anchore_images', text: "${env.HARBOR_URL}/library/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
-        anchore name: 'anchore_images'
+        //writeFile file: 'anchore_images', text: "${env.HARBOR_URL}/library/devsecops/spring-petclinic:v1.0.${env.BUILD_ID}"
+        //anchore name: 'anchore_images'
       }
     }
     stage('Approval') {
